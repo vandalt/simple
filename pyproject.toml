@@ -1,0 +1,38 @@
+[project]
+name = "simple"
+authors = [
+  { name="Thomas Vandal", email="thomas.vandal@umontreal.ca" },
+]
+description = "Simple probabilistic programming language"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+]
+dynamic = ["version"]
+dependencies = [
+  "numpy",
+  "scipy",
+  "matplotlib",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/vandalt/simple"
+"Repository" = "https://github.com/vandalt/simple"
+"Bug Tracker" = "https://github.com/vandalt/simple/issues"
+
+[project.optional-dependencies]
+test = ["pytest", "numpyro"]
+
+[build-system]
+requires = ["setuptools>=61.0", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+
+[tool.pytest.ini_options]
+addopts = [
+  "--import-mode=importlib",
+]
