@@ -10,14 +10,16 @@ class Distribution:
     # TODO: Register batch shape here?
     # TODO: Add simple init template?
     # TODO: Add repr and str?
-    def log_prob(self, x: float):
+
+    def log_prob(self, x: float) -> np.ndarray:
         # TODO: Handle ArrayLike argument and shape broadcasting
         # TODO: Implement a 'validate sample' like numpyro?
+        # TODO: Write boilerplate for shape here
         raise NotImplementedError
 
 
-    def prior_transform(self, u: float):
-        # TODO: Hardle varied shapes
+    def prior_transform(self, u: float) -> float:
+        # TODO: Handle varied shapes
         raise NotImplementedError
 
     def sample(
@@ -34,9 +36,7 @@ class Uniform(Distribution):
         if np.any(self.low >= self.high):
             raise ValueError("'low' must be lower than 'high'")
 
-    def log_prob(self, x: float) -> float:
-        # TODO: Handle ArrayLike argument and shape broadcasting. Check numpyro
-        # TODO: Implement a 'validate sample' like numpyro?
+    def log_prob(self, x: Union[float, ArrayLike]) -> np.ndarray:
         return np.where(
             np.logical_and(x >= self.low, x < self.high),
             -np.log(self.high - self.low),
