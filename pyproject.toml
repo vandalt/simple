@@ -25,6 +25,7 @@ dependencies = [
 
 [project.optional-dependencies]
 test = ["pytest", "numpyro"]
+tutorials = ["corner", "arviz", "emcee"]
 
 [build-system]
 requires = ["setuptools>=61.0", "setuptools-scm"]
