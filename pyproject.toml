@@ -5,11 +5,13 @@ authors = [
 ]
 description = "Simple probabilistic programming language"
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.9"
+license = { text = "MIT License" }
 classifiers = [
-  "Programming Language :: Python :: 3",
-  "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Development Status :: 4 - Beta",
+  "License :: OSI Approved :: MIT License",
 ]
 dynamic = ["version"]
 dependencies = [
@@ -26,6 +28,7 @@ dependencies = [
 [project.optional-dependencies]
 test = ["pytest", "numpyro"]
 tutorials = ["corner", "arviz", "emcee", "dynesty"]
+dev = ["pre-commit", "black", "ruff", "nox"]
 
 [build-system]
 requires = ["setuptools>=61.0", "setuptools-scm"]
