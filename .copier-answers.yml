@@ -1,0 +1,16 @@
+# Changes here will be overwritten by Copier
+_commit: v0.3.0
+_src_path: ../copier-python/
+author_email: thomas.vandal@umontreal.ca
+author_fullname: Thomas Vandal
+coc_email: thomas.vandal@umontreal.ca
+copyright_email: thomas.vandal@umontreal.ca
+copyright_holder: Thomas Vandal
+copyright_license: MIT
+copyright_year: '2023'
+project_bug_tracker: https://github.com/vandalt/simple/issues
+project_description: Simple probabilistic programming language
+project_homepage: https://simple.readthedocs.io
+project_name: simple
+project_source_repository: https://github.com/vandalt/simple
+python_project_name: simple
