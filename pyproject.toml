@@ -21,7 +21,7 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://simple.readthedocs.io"
+"Homepage" = "https://simple-ppl.readthedocs.io"
 "Repository" = "https://github.com/vandalt/simple"
 "Bug Tracker" = "https://github.com/vandalt/simple/issues"
 
