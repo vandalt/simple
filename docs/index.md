@@ -16,6 +16,7 @@ installation
 :caption: Tutorials
 
 tutorials/getting-started
+tutorials/fit_line.ipynb
 ```
 
 ## Authors & license
