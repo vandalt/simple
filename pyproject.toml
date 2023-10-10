@@ -32,10 +32,11 @@ docs = [
   "sphinx",
   "sphinx_book_theme",
   "myst-nb",
-   "corner",
-   "arviz",
-   "emcee",
-   "dynesty",
+  "corner",
+  "arviz",
+  "emcee",
+  "tqdm",
+  "dynesty",
 ]
 dev = ["pre-commit", "black", "ruff", "nox"]
 
