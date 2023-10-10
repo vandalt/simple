@@ -1,4 +1,6 @@
 # %%
+from collections import OrderedDict
+
 import arviz as az
 import corner
 import matplotlib.pyplot as plt
@@ -29,32 +31,39 @@ plt.legend()
 plt.show()
 
 
-def forward_model(theta, x) -> NDArray:
-    m, b = theta[:2]
-    return m * x + b
-
-
-# TODO: Should be built-into model?
-# TODO: Combine model and likelihood
-# TODO: Remove the need to always pass model
-def gaussian_log_likelihood(
-    theta: ArrayLike, x: ArrayLike, y: ArrayLike, yerr: ArrayLike, model: ArrayLike,
-) -> float:
-    mu = model(theta, x)
-    # TODO: Better way to do this
-    jitter = theta[-1]
-    # TODO: Handle extra error sigma parameter
-    sigma = np.sqrt(yerr**2 + jitter**2)
+# %%
+def gaussian(y, mu, sigma):
     return -0.5 * np.sum(((y - mu) / sigma) ** 2 + np.log(2 * np.pi * sigma**2))
 
 
 # %%
-parameters = {
-    # TODO: Is there symmetric similar to log-uniform that would work... Broad normal?
+def forward_model(theta: ArrayLike, x: NDArray) -> NDArray:
+    m, b = theta[:2]
+    return m * x + b
+
+
+def gaussian_log_likelihood(
+    theta: ArrayLike,
+    y: ArrayLike,
+    yerr: ArrayLike,
+    model: ArrayLike,
+    *args,
+    **kwargs,
+) -> float:
+    mu = model(theta, *args, **kwargs)
+
+    jitter = theta[-1]
+    sigma = np.sqrt(yerr**2 + jitter**2)
+
+    return gaussian(mu, y, sigma)
+
+
+parameters = OrderedDict({
+    # TODO: Change distributions for m and sigma
     "m": sdist.Uniform(low=-2.0, high=2.0),
     "b": sdist.Uniform(low=-40.0, high=40.0),
     "sigma": sdist.Uniform(low=0.0, high=10.0),
-}
+})
 mymodel = sm.Model()
 mymodel.parameters = parameters
 mymodel.forward_model = forward_model
@@ -87,8 +96,8 @@ plt.show()
 plt.show()
 
 # %%
-test_point = np.array([0.2, -5.0, 1.])
-mymodel.log_prob([0.0, 1.0], x, y, yerr, mymodel.forward_model)
+test_point = np.array([0.2, -5.0, 1.0])
+mymodel.log_prob([0.0, 1.0], y, yerr, mymodel.forward_model, x)
 
 # %%
 ax = plt.gca()
@@ -108,8 +117,9 @@ num_steps = 10_000
 num_warmup = 200
 pos = test_point + 1e-4 * rng.standard_normal((nwalkers, ndim))
 
-# TODO: Enable model samples, can save on the fly in likelihood calculations as already calculated
-sampler = emcee.EnsembleSampler(nwalkers, ndim, mymodel.log_prob, args=(x, y, yerr, mymodel.forward_model))
+sampler = emcee.EnsembleSampler(
+    nwalkers, ndim, mymodel.log_prob, args=(y, yerr, mymodel.forward_model, x)
+)
 sampler.run_mcmc(pos, num_steps, progress=True)
 
 # %%
@@ -129,7 +139,7 @@ axes[-1].set_xlabel("step number")
 plt.show()
 
 # %%
-inf_data =az.from_emcee(sampler, var_names=labels)
+inf_data = az.from_emcee(sampler, var_names=labels)
 inf_data = inf_data.sel(draw=slice(num_warmup, None))
 
 # %%
@@ -142,3 +152,60 @@ plt.show()
 # %%
 corner.corner(inf_data, var_names=labels, show_titles=True, truths=truths)
 plt.show()
+
+# %%
+import dynesty
+
+sampler = dynesty.NestedSampler(
+    mymodel.log_likelihood,
+    mymodel.prior_transform,
+    len(mymodel.parameters),
+    logl_args=(y, yerr, mymodel.forward_model, x),
+)
+
+dsampler = dynesty.DynamicNestedSampler(
+    mymodel.log_likelihood,
+    mymodel.prior_transform,
+    len(mymodel.parameters),
+    logl_args=(y, yerr, mymodel.forward_model, x),
+)
+
+# %%
+sampler.run_nested()
+
+# %%
+dsampler.run_nested()
+
+# %%
+from dynesty import plotting as dyplot
+
+dyplot.traceplot(sampler.results)
+plt.show()
+
+# %%
+dyplot.runplot(sampler.results, logplot=True)
+plt.show()
+
+# %%
+dyplot.cornerplot(sampler.results)
+plt.show()
+
+# %%
+equal_samples = sampler.results.samples_equal()
+d_equal_samples = dsampler.results.samples_equal()
+
+# %%
+corner_kwargs = dict(
+    hist_kwargs={"density": True},
+    plot_datapoints=False,
+)
+fig = corner.corner(inf_data, var_names=labels, show_titles=True, truths=truths, color="k",**corner_kwargs)
+corner.corner(equal_samples, labels=labels, color="b", fig=fig, **corner_kwargs)
+corner.corner(d_equal_samples, labels=labels, color="r", fig=fig, **corner_kwargs)
+plt.show()
+
+
+# TODO: Example with ultranest
+# TODO: Example with multinest
+# TODO: Example with zeus
+# TODO: Example with blackjax?
