@@ -27,9 +27,9 @@ class Model:
             samples[parameter] = self.parameters[parameter].sample(size=size, seed=seed)
         if sample_model:
             theta = np.array([samples[parameter] for parameter in samples]).T
-            samples["model"] = np.array([
-                self.forward_model(theta_i, *args, **kwargs) for theta_i in theta
-            ])
+            samples["model"] = np.array(
+                [self.forward_model(theta_i, *args, **kwargs) for theta_i in theta]
+            )
         return samples
 
     def get_parameter_names(self):

@@ -20,4 +20,7 @@ import simple.utils as sut
 def test_promote_shape_compare_numpyro(args, shape):
     numpyro = pytest.importorskip("numpyro")
     promote_shapes_numpyro = numpyro.distributions.util.promote_shapes
-    np.testing.assert_allclose(sut.promote_shapes(*args, shape=shape), promote_shapes_numpyro(*args, shape=shape))
+    np.testing.assert_allclose(
+        sut.promote_shapes(*args, shape=shape),
+        promote_shapes_numpyro(*args, shape=shape),
+    )
