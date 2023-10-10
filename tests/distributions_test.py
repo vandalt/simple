@@ -21,6 +21,7 @@ def test_uniform_bound_args():
 @pytest.mark.parametrize(
     "low,high",
     [
+        (2.0, 2.0),
         (3.0, 2.0),
         ([2.0, 3.0, 1.0], [3.0, 4.0]),
         ([3.0, 2.0], [2.0, 3.0]),
@@ -29,22 +30,30 @@ def test_uniform_bound_args():
         ([3.0, 2.0], 1.0),
     ],
 )
-def test_uniform_low_over_high(low, high):
+def test_uniform_low_geq_high(low, high):
     # Low >= high should raise ValueError
     with pytest.raises(ValueError):
         sdist.Uniform(low=low, high=high)
 
 
-# TODO: Test shape
+@pytest.mark.parametrize(
+    "low,high",
+    [
+        (1.0, 2.0),
+        ([2.0, 3.0], [3.0, 4.0]),
+        ([2.0, 3.0], 4.0),
+        (2.0, [3.0, 4.0]),
+        (2.0, [[3.0, 4.0], [5.0, 8.0]]),
+    ]
+)
+def test_uniform_shapes(low, high):
+    # Check that batch shape is the same as numpyro
+    uniform = sdist.Uniform(low=low, high=high)
+    numpyro = pytest.importorskip("numpyro")
+    numpyro_uniform = numpyro.distributions.Uniform(low=low, high=high)
+
+    assert uniform.batch_shape == numpyro_uniform.batch_shape
+
+# def test_uniform_log_
 # TODO: Test log_prob
 # TODO: Test sample
-
-
-# def test_uniform_log_prob():
-#     uniform = sdist.Uniform(low=2.0, high=3.0)
-#
-#     np.testing.assert_allclose(uniform.log_prob(2.5), -np.log(1.0), rtol=1e-7)
-#     np.testing.assert_equal(uniform.log_prob(4.0), -np.inf)
-#     assert isinstance(uniform.log_prob(2.5), float)
-#
-#     # TODO: Test shapes
