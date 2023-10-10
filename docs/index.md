@@ -8,14 +8,14 @@ Simple probabilistic programming language
 :maxdepth: 2
 :caption: User Guide
 
-installation/index
+installation
 ```
 
 ```{toctree}
 :maxdepth: 2
 :caption: Tutorials
 
-tutorials/getting-started/index
+tutorials/getting-started
 ```
 
 ## Authors & license
