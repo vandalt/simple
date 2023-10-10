@@ -1,4 +1,3 @@
-import numpy as np
 import pytest
 
 from simple import distributions as sdist
@@ -7,15 +6,16 @@ from simple import distributions as sdist
 def test_uniform_default():
     # Check default low/high attributes for uniform
     uniform = sdist.Uniform()
-    assert uniform.low == 0.0
-    assert uniform.high == 1.0
+    assert uniform.low == 0.0  # noqa
+    assert uniform.high == 1.0  # noqa
 
 
 def test_uniform_bound_args():
     # Check that custom attributes are assigned
-    uniform = sdist.Uniform(low=2.0, high=3.0)
-    assert uniform.low == 2.0
-    assert uniform.high == 3.0
+    lo, hi = 2.0, 3.0
+    uniform = sdist.Uniform(low=lo, high=hi)
+    assert uniform.low == lo
+    assert uniform.high == hi
 
 
 @pytest.mark.parametrize(
@@ -44,7 +44,7 @@ def test_uniform_low_geq_high(low, high):
         ([2.0, 3.0], 4.0),
         (2.0, [3.0, 4.0]),
         (2.0, [[3.0, 4.0], [5.0, 8.0]]),
-    ]
+    ],
 )
 def test_uniform_shapes(low, high):
     # Check that batch shape is the same as numpyro
@@ -53,6 +53,7 @@ def test_uniform_shapes(low, high):
     numpyro_uniform = numpyro.distributions.Uniform(low=low, high=high)
 
     assert uniform.batch_shape == numpyro_uniform.batch_shape
+
 
 # def test_uniform_log_
 # TODO: Test log_prob
