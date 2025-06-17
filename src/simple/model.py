@@ -45,6 +45,13 @@ class Model:
             x = dict(zip(self.keys(), x, strict=True))
         return x
 
+    def nautilus_prior(self):
+        from nautilus import Prior
+        prior = Prior()
+        for pname, pdist in self.parameters.items():
+            prior.add_parameter(pname, pdist.dist)
+        return prior
+
     def log_prob(self, parameters):
         if not isinstance(parameters, dict):
             parameters = dict(zip(self.keys(), parameters, strict=True))
