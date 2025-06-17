@@ -1,51 +1,54 @@
-from collections import OrderedDict
-from typing import Callable, Optional, Union
+from collections.abc import Callable
+from dataclasses import dataclass
 
 import numpy as np
 from numpy.typing import ArrayLike
 
 
+@dataclass
 class Model:
-    # TODO: Specify proper type and default
-    forward_model: Callable = None
-    parameters: OrderedDict = None
-    log_likelihood: Callable = None
+    parameters: dict
+    log_likelihood: Callable
 
-    # TODO: Init function to set parameters and fwd model
+    def __init__(self, parameters: dict, log_likelihood: Callable):
+        self.parameters = parameters
+        self._log_likelihood = log_likelihood
+        # TODO: Use property via parameters?
 
-    def sample_prior(
-        self,
-        *args,
-        size: Optional[int] = None,
-        seed: Optional[Union[int, np.ndarray[int]]] = None,
-        sample_model: bool = True,
-        **kwargs,
-    ) -> np.ndarray:
-        # TODO: Handle seed for multiple parameters
-        samples = {}
-        for parameter in self.parameters:
-            samples[parameter] = self.parameters[parameter].sample(size=size, seed=seed)
-        if sample_model:
-            theta = np.array([samples[parameter] for parameter in samples]).T
-            samples["model"] = np.array(
-                [self.forward_model(theta_i, *args, **kwargs) for theta_i in theta]
-            )
-        return samples
-
-    def get_parameter_names(self):
+    def keys(self):
         return list(self.parameters.keys())
 
+
+    # TODO: Setter?
+    def log_likelihood(self, parameters):
+        if not isinstance(parameters, dict):
+            parameters = dict(zip(self.keys(), parameters, strict=True))
+        return self._log_likelihood(parameters)
+
+    def log_prior(self, parameters):
+        if not isinstance(parameters, dict):
+            parameters = dict(zip(self.keys(), parameters, strict=True))
+        lp = 0.0
+        for pname, pval in parameters.items():
+            pdist = self.parameters[pname]
+            lp += pdist.log_prob(pval)
+        return lp
+
     def prior_transform(self, u: ArrayLike) -> ArrayLike:
+        is_dict = isinstance(u, dict)
+        if is_dict:
+            u = np.array(list(u.values()))
         x = np.array(u)
-        for i, parameter in enumerate(self.parameters):
-            x[i] = self.parameters[parameter].prior_transform(u[i])
+        for i, pdist in enumerate(self.parameters.values()):
+            x[i] = pdist.prior_transform(u[i])
+        if is_dict:
+            x = dict(zip(self.keys(), x, strict=True))
         return x
 
-    def log_prob(self, theta: ArrayLike, *args, **kwargs):
-        theta = np.asarray(theta)
-        log_prior = 0.0
-        for param_dist, theta_i in zip(self.parameters.values(), theta):
-            log_prior += param_dist.log_prob(theta_i)
-        if np.isfinite(log_prior):
-            return log_prior + self.log_likelihood(theta, *args, **kwargs)
-        return log_prior
+    def log_prob(self, parameters):
+        if not isinstance(parameters, dict):
+            parameters = dict(zip(self.keys(), parameters, strict=True))
+        lp = self.log_prior(parameters)
+        if np.isfinite(lp):
+            return lp + self.log_likelihood(parameters)
+        return lp
