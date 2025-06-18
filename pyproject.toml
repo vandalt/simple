@@ -26,13 +26,12 @@ dependencies = [
 "Bug Tracker" = "https://github.com/vandalt/simple/issues"
 
 [project.optional-dependencies]
-test = ["pytest", "numpyro"]
+test = ["pytest"]
 docs = [
   "sphinx",
   "sphinx_book_theme",
   "myst-nb",
   "corner",
-  "arviz",
   "emcee",
   "zeus-mcmc",
   "tqdm",
