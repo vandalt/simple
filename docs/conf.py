@@ -37,6 +37,7 @@ html_theme_options = {
     "use_repository_button": True,
     "use_download_button": True,
 }
-nb_execution_mode = "auto"
+nb_execution_mode = "off"
+nb_merge_streams = True
 nb_execution_excludepatterns = []
 nb_execution_timeout = -1

@@ -32,6 +32,9 @@ docs = [
   "sphinx_book_theme",
   "myst-nb",
   "corner",
+  # NOTE: Required for corner to work with dict
+  "arviz",
+  "ipywidgets",
   "emcee",
   "zeus-mcmc",
   "tqdm",
