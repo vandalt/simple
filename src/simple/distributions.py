@@ -3,9 +3,7 @@ from collections.abc import Callable
 
 import numpy as np
 from numpy.typing import ArrayLike
-from scipy.stats import rv_continuous, uniform
-
-from simple.utils import promote_shapes
+from scipy.stats import rv_continuous
 
 
 class Distribution:
@@ -59,45 +57,3 @@ class ScipyDistribution(Distribution):
     ) -> np.ndarray:
         rng = np.random.default_rng(seed)
         return self.dist.rvs(size=size, random_state=rng, **kwargs)
-
-
-# NOTE: Example, don't use
-# TODO: Move to a tutorial
-# TODO: Make sure not building distributions every call: https://johannesbuchner.github.io/UltraNest/priors.html#id1
-class UniformScipy(ScipyDistribution):
-    def __init__(self, low: ArrayLike = 0.0, high: ArrayLike = 1.0):
-        kwargs = dict(
-            loc=low,
-            scale=high - low,
-        )
-        # Create parent with super
-        super().__init__(dist=uniform, **kwargs)
-
-
-class Uniform(Distribution):
-    def __init__(self, low: ArrayLike = 0.0, high: ArrayLike = 1.0):
-        self.low, self.high = promote_shapes(low, high)
-        self.batch_shape = np.broadcast_shapes(np.shape(low), np.shape(high))
-        if np.any(self.low >= self.high):
-            raise ValueError("'low' must be lower than 'high'")
-
-    def log_prob(self, x: float | ArrayLike) -> np.ndarray:
-        return np.where(
-            np.logical_and(x >= self.low, x < self.high),
-            -np.log(self.high - self.low),
-            -np.inf,
-        )
-
-    def prior_transform(self, u: float) -> float:
-        return self.low + u * (self.high - self.low)
-
-    def sample(
-        self,
-        size: int | None = None,
-        seed: int | np.ndarray[int] | None = None,
-    ) -> ArrayLike:
-        rng = np.random.default_rng(seed)
-        if np.isscalar(size):
-            size = (size,)
-        shape = size + self.batch_shape if size else self.batch_shape
-        return rng.uniform(low=self.low, high=self.high, size=shape)
