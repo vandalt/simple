@@ -5,7 +5,7 @@ authors = [
 ]
 description = "Simple probabilistic programming language"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = { text = "MIT License" }
 classifiers = [
   "Operating System :: OS Independent",
@@ -27,7 +27,6 @@ dependencies = [
 
 [project.optional-dependencies]
 test = ["pytest", "numpyro"]
-tutorials = ["corner", "arviz", "emcee", "dynesty"]
 docs = [
   "sphinx",
   "sphinx_book_theme",
@@ -35,10 +34,12 @@ docs = [
   "corner",
   "arviz",
   "emcee",
+  "zeus-mcmc",
   "tqdm",
-  "dynesty",
+  "ultranest",
+  "nautilus-sampler",
 ]
-dev = ["pre-commit", "black", "ruff", "nox"]
+dev = ["pre-commit", "ruff", "nox"]
 
 [build-system]
 requires = ["hatchling", "hatch-vcs"]
@@ -50,12 +51,7 @@ source = "vcs"
 [tool.hatch.build.hooks.vcs]
 version-file = "src/simple/_version.py"
 
-[tool.black]
-target-version = ["py39"]
-line-length = 88
-
 [tool.ruff]
-target-version = "py39"
 line-length = 88
 select = ["F", "I", "E", "W", "YTT", "B", "Q", "PLE", "PLR", "PLW", "UP"]
 ignore = []
