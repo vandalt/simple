@@ -17,6 +17,7 @@ installation
 
 tutorials/getting-started
 tutorials/fit_line.ipynb
+tutorials/gaussian_processes.ipynb
 ```
 
 ## Authors & license
