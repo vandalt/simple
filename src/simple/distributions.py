@@ -8,6 +8,14 @@ from scipy.stats import rv_continuous
 
 
 class Distribution(ABC):
+    """Abstract base class for distributions.
+
+    Defines the interface distributions must implement.
+
+    All distributions should have a `__repr__()` showing initialization parameters,
+    as well as log_prob(), `prior_transform()` and `sample()` methods.
+    """
+
     @abstractmethod
     def __repr__(self) -> str:
         pass
@@ -31,6 +39,12 @@ class Distribution(ABC):
 
 class ScipyDistribution(Distribution):
     def __init__(self, dist: rv_continuous | Callable, *args, **kwargs):
+        """Distribution based on a scipy random variable.
+
+        :param dist: Scipy random variable (RV), either already instantiated or not.
+                     If the RV is not instantiated, it will be during init and all args
+                     and kwargs are passed to it.
+        """
         if hasattr(dist, "dist") and hasattr(dist, "args"):
             if len(kwargs) > 0 or len(args) > 0:
                 warnings.warn(
@@ -57,9 +71,23 @@ class ScipyDistribution(Distribution):
         return f"ScipyDistribution({self.dist.dist.name}{signature_tuple})"
 
     def log_prob(self, x: float | ArrayLike, *args, **kwargs) -> np.ndarray:
+        """Log probability density function.
+
+        Calls the scipy distribution's `logpdf()`.
+
+        :param x: Value(s) at which to evaluate the log probability.
+        :return: Log probability value(s)
+        """
         return self.dist.logpdf(x, *args, **kwargs)
 
     def prior_transform(self, u: float | ArrayLike, **kwargs) -> float | np.ndarray:
+        """Prior transform (inverse CDF) for nested sampling
+
+        Calls the scipy distributiion's `ppf()` (percent point function).
+
+        :param u: Uniform samples between 0 and 1
+        :return: Transformed samples
+        """
         return self.dist.ppf(u, **kwargs)
 
     def sample(
@@ -68,5 +96,13 @@ class ScipyDistribution(Distribution):
         seed: int | np.ndarray[int] | None = None,
         **kwargs,
     ) -> np.ndarray:
+        """Draw samples from the distribution
+
+        Calls the scipy distribution's `rvs()` method.
+
+        :param size: Shape of the samples
+        :param seed: Random seed to use
+        :return: Random samples with shape `size`
+        """
         rng = np.random.default_rng(seed)
         return self.dist.rvs(size=size, random_state=rng, **kwargs)

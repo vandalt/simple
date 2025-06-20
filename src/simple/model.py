@@ -1,11 +1,13 @@
 from collections.abc import Callable
-from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import ArrayLike
 
+if TYPE_CHECKING:
+    from nautilus import Prior
 
-@dataclass
+
 class Model:
     parameters: dict
     log_likelihood: Callable
@@ -15,7 +17,8 @@ class Model:
         self._log_likelihood = log_likelihood
         # TODO: Use property via parameters?
 
-    def keys(self):
+    def keys(self) -> list[str]:
+        """List of parameter names (dictionary keys)"""
         return list(self.parameters.keys())
 
     # TODO: Setter?
@@ -25,7 +28,13 @@ class Model:
             parameters = dict(zip(self.keys(), parameters, strict=True))
         return self._log_likelihood(parameters, *args, **kwargs)
 
-    def log_prior(self, parameters):
+    def log_prior(self, parameters: dict | ArrayLike) -> float:
+        """Log of the prior probability for the model
+
+        :param parameters: Dictionary or array of parameters. If an array is used,
+                           the order must be the same as Model.keys()
+        :return: Log-prior probability
+        """
         if not isinstance(parameters, dict):
             parameters = dict(zip(self.keys(), parameters, strict=True))
         lp = 0.0
@@ -34,7 +43,16 @@ class Model:
             lp += pdist.log_prob(pval)
         return lp
 
-    def prior_transform(self, u: ArrayLike) -> ArrayLike:
+    def prior_transform(self, u: ArrayLike | dict) -> np.ndarray | dict:
+        """Prior transform of the model
+
+        Takes samples from a uniform distribution between 0 and 1
+        for all parameters and returns samples transformed according to the prior.
+
+        :param u: Samples from the uniform distribution. Can be a dict or an array
+                  ordered as Model.keys()
+        :return: Prior samples, as a dict or an array depending on the input type.
+        """
         is_dict = isinstance(u, dict)
         if is_dict:
             u = np.array(list(u.values()))
@@ -45,7 +63,11 @@ class Model:
             x = dict(zip(self.keys(), x, strict=True))
         return x
 
-    def nautilus_prior(self):
+    def nautilus_prior(self) -> "Prior":
+        """Builds and return a `nautilus.Prior` for the model.
+
+        :return: Nautilus Prior object.
+        """
         from nautilus import Prior
 
         prior = Prior()
@@ -53,7 +75,12 @@ class Model:
             prior.add_parameter(pname, pdist.dist)
         return prior
 
-    def log_prob(self, parameters, *args, **kwargs):
+    def log_prob(self, parameters: dict | ArrayLike, *args, **kwargs) -> float:
+        """Log posterior probability for the model
+
+        :param parameters: Parameters as a dict or an array ordered as Model.keys()
+        :return: Log posterior probability
+        """
         if not isinstance(parameters, dict):
             parameters = dict(zip(self.keys(), parameters, strict=True))
         lp = self.log_prior(parameters)
@@ -61,9 +88,12 @@ class Model:
             return lp + self.log_likelihood(parameters, *args, **kwargs)
         return lp
 
-    def get_prior_samples(self, n_samples: int):
-        # TODO: Allow rng or seed for priors
-        # TODO: Support emcee
+    def get_prior_samples(self, n_samples: int) -> dict:
+        """Generate prior samples
+
+        :param n_samples: Number of samples
+        :return: Dictionary of prior samples
+        """
         rng = np.random.default_rng()
         u = dict(
             zip(
