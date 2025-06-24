@@ -15,15 +15,21 @@ class Model:
     def __init__(self, parameters: dict, log_likelihood: Callable):
         self.parameters = parameters
         self._log_likelihood = log_likelihood
-        # TODO: Use property via parameters?
+        # Attempt to make log-likelihood inherit docstring.
+        # Works at runtime but not for static (LSP) tools
+        self.log_likelihood.__func__.__doc__ = self._log_likelihood.__doc__
+
+    def _log_likelihood(self, parameters, *args, **kwargs) -> float:
+        raise NotImplementedError(
+            "log_likelihood must be passed to init or _log_likelihood must be "
+            "implemented by subclasses."
+        )
 
     def keys(self) -> list[str]:
         """List of parameter names (dictionary keys)"""
         return list(self.parameters.keys())
 
-    # TODO: Setter?
     def log_likelihood(self, parameters, *args, **kwargs):
-        # TODO: Inherit docstring from _log_likelihood but complement to explain input
         if not isinstance(parameters, dict):
             parameters = dict(zip(self.keys(), parameters, strict=True))
         return self._log_likelihood(parameters, *args, **kwargs)
