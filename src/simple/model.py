@@ -108,3 +108,54 @@ class Model:
         elif fmt != "array":
             raise ValueError(f"Invalid format: {fmt}. Use 'dict' or 'array'.")
         return self.prior_transform(u)
+
+
+class ForwardModel(Model):
+    """A model whose likelihood calls a forward model as the mean."""
+
+    forward: Callable
+
+    def __init__(self, parameters: dict, log_likelihood: Callable, forward: Callable):
+        super().__init__(parameters, log_likelihood)
+        self._forward = forward
+        self.forward.__func__.doc__ = self._forward.__doc__
+
+    def forward(self, parameters: dict | ArrayLike, *args, **kwargs) -> np.ndarray:
+        if not isinstance(parameters, dict):
+            parameters = dict(zip(self.keys(), parameters, strict=True))
+        return self._forward(parameters, *args, **kwargs)
+
+    def get_prior_pred(self, n_samples: int, *args, **kwargs) -> np.ndarray:
+        prior_params = self.get_prior_samples(n_samples, fmt="array")
+        pred = []
+        for p in prior_params.T:
+            pred.append(self.forward(p, *args, **kwargs))
+        return np.array(pred)
+
+
+class GaussianForwardModel(ForwardModel):
+    def __init__(self, parameters: dict, forward: Callable):
+        """Initialize a Gaussian forward model.
+
+        :param parameters: Dictionary of parameters with their prior distributions.
+        :param forward: Callable that computes the forward model.
+        """
+        super().__init__(parameters, self._log_likelihood, forward)
+
+    def _log_likelihood(
+        self, parameters: dict, data: np.ndarray, err: np.ndarray, *args, **kwargs
+    ) -> float:
+        """Gaussian log-likelihood for a forward model
+
+        This method calls the forward model with `parameters`.
+        The output is passed through a gaussian likelihood with `data` and `err`.
+        If `parmaters` contains `sigma`, this parameter is added in quadrature to `err`.
+
+        :param parameters: Parameter dictionary
+        :param data: Data array
+        :param err: Error array
+        :return: Gaussian log-likelihood
+        """
+        mu = self.forward(parameters, *args, **kwargs)
+        sigma = np.sqrt(parameters["sigma"] ** 2 + err**2)
+        return -0.5 * np.sum(((data - mu) / sigma) ** 2 + np.log(2 * np.pi * sigma**2))
