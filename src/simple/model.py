@@ -94,18 +94,17 @@ class Model:
             return lp + self.log_likelihood(parameters, *args, **kwargs)
         return lp
 
-    def get_prior_samples(self, n_samples: int) -> dict:
+    def get_prior_samples(self, n_samples: int, fmt: str = "dict") -> dict:
         """Generate prior samples
 
         :param n_samples: Number of samples
+        :param fmt: Format of the samples (dict or array)
         :return: Dictionary of prior samples
         """
         rng = np.random.default_rng()
-        u = dict(
-            zip(
-                self.keys(),
-                rng.uniform(size=(len(self.parameters), n_samples)),
-                strict=True,
-            )
-        )
+        u = rng.uniform(size=(len(self.parameters), n_samples))
+        if fmt == "dict":
+            u = dict(zip(self.keys(), u, strict=True))
+        elif fmt != "array":
+            raise ValueError(f"Invalid format: {fmt}. Use 'dict' or 'array'.")
         return self.prior_transform(u)
