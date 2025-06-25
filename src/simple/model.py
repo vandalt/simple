@@ -134,13 +134,38 @@ class ForwardModel(Model):
 
 
 class GaussianForwardModel(ForwardModel):
-    def __init__(self, parameters: dict, forward: Callable):
+    def __init__(
+        self, parameters: dict, forward: Callable, sigma_in_model: bool = False
+    ):
         """Initialize a Gaussian forward model.
 
         :param parameters: Dictionary of parameters with their prior distributions.
         :param forward: Callable that computes the forward model.
+                        Should accept a dictionary of parameters.
+        :param sigma_in_model: Boolean flag to allow usage of 'sigma' (extra error term)
+                               in the forward model.
         """
+        # TODO: Safeguard against 'sigma' being used by forward model
+        if "sigma" not in parameters:
+            raise ValueError(
+                "The extra error term 'sigma' must be a parameter in the model."
+            )
         super().__init__(parameters, self._log_likelihood, forward)
+
+        if sigma_in_model:
+            return
+
+        test_prior_point = self.get_prior_samples(1)
+        del test_prior_point["sigma"]
+        try:
+            self.forward(test_prior_point)
+        except KeyError as e:
+            if "sigma" in str(e):
+                raise ValueError(
+                    "Forward model uses the extra error term 'sigma' as a parameter."
+                    "This is generally not desired. If it is, set sigma_in_model=True."
+                ) from e
+            raise e
 
     def _log_likelihood(
         self, parameters: dict, data: np.ndarray, err: np.ndarray, *args, **kwargs
