@@ -135,7 +135,10 @@ class ForwardModel(Model):
 
 class GaussianForwardModel(ForwardModel):
     def __init__(
-        self, parameters: dict, forward: Callable, sigma_in_model: bool = False
+        self,
+        parameters: dict,
+        forward: Callable,
+        sigma_in_model: bool = False,
     ):
         """Initialize a Gaussian forward model.
 
@@ -145,20 +148,24 @@ class GaussianForwardModel(ForwardModel):
         :param sigma_in_model: Boolean flag to allow usage of 'sigma' (extra error term)
                                in the forward model.
         """
-        # TODO: Safeguard against 'sigma' being used by forward model
         if "sigma" not in parameters:
             raise ValueError(
                 "The extra error term 'sigma' must be a parameter in the model."
             )
         super().__init__(parameters, self._log_likelihood, forward)
+        self.sigma_in_model = sigma_in_model
+        self._sigma_forward_checked = False
+        self._in_sigma_check = False
 
-        if sigma_in_model:
+    def _test_forward_sigma(self, *args, **kwargs):
+        self._in_sigma_check = True
+        if self.sigma_in_model:
             return
 
         test_prior_point = self.get_prior_samples(1)
         del test_prior_point["sigma"]
         try:
-            self.forward(test_prior_point)
+            self.forward(test_prior_point, *args, **kwargs)
         except KeyError as e:
             if "sigma" in str(e):
                 raise ValueError(
@@ -166,6 +173,13 @@ class GaussianForwardModel(ForwardModel):
                     "This is generally not desired. If it is, set sigma_in_model=True."
                 ) from e
             raise e
+        self._sigma_forward_checked = True
+        self._in_sigma_check = False
+
+    def forward(self, parameters: dict | ArrayLike, *args, **kwargs):
+        if not self._sigma_forward_checked and not self._in_sigma_check:
+            self._test_forward_sigma(*args, **kwargs)
+        return super().forward(parameters, *args, **kwargs)
 
     def _log_likelihood(
         self, parameters: dict, data: np.ndarray, err: np.ndarray, *args, **kwargs
